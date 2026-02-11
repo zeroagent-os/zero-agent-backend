@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import { v4 as uuidv4 } from 'uuid';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { v4: uuidv4 } = require('uuid');
 
 dotenv.config({ path: '.env.local' });
 
@@ -12,12 +12,12 @@ app.use(cors());
 app.use(express.json());
 
 // Health check
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
 // Get all skills
-app.get('/api/skills', async (req: Request, res: Response) => {
+app.get('/api/skills', async (req, res) => {
   try {
     const skills = [
       { id: '1', name: 'Calculator', category: 'Math', price: 0, icon: '🧮', description: 'Basic math operations' },
@@ -34,7 +34,7 @@ app.get('/api/skills', async (req: Request, res: Response) => {
 });
 
 // Install skill
-app.post('/api/skills/:id/install', async (req: Request, res: Response) => {
+app.post('/api/skills/:id/install', async (req, res) => {
   try {
     const { id } = req.params;
     const { agentId } = req.body;
@@ -45,7 +45,7 @@ app.post('/api/skills/:id/install', async (req: Request, res: Response) => {
 });
 
 // Execute skill
-app.post('/api/agents/:agentId/execute', async (req: Request, res: Response) => {
+app.post('/api/agents/:agentId/execute', async (req, res) => {
   try {
     const { agentId } = req.params;
     const { skillId, inputs } = req.body;
@@ -68,7 +68,7 @@ app.post('/api/agents/:agentId/execute', async (req: Request, res: Response) => 
 });
 
 // Get execution history
-app.get('/api/agents/:agentId/executions', async (req: Request, res: Response) => {
+app.get('/api/agents/:agentId/executions', async (req, res) => {
   try {
     const { agentId } = req.params;
     const executions = [
@@ -87,7 +87,7 @@ app.get('/api/agents/:agentId/executions', async (req: Request, res: Response) =
 });
 
 // Get agent metrics
-app.get('/api/agents/:id/metrics', async (req: Request, res: Response) => {
+app.get('/api/agents/:id/metrics', async (req, res) => {
   try {
     const { id } = req.params;
     const metrics = {
@@ -103,7 +103,7 @@ app.get('/api/agents/:id/metrics', async (req: Request, res: Response) => {
 });
 
 // Download agent
-app.post('/api/agents/:id/download', async (req: Request, res: Response) => {
+app.post('/api/agents/:id/download', async (req, res) => {
   try {
     const { id } = req.params;
     res.json({ success: true, message: 'Agent downloaded', downloadUrl: `/agents/${id}/agent.zip` });
@@ -113,7 +113,7 @@ app.post('/api/agents/:id/download', async (req: Request, res: Response) => {
 });
 
 // Error handler
-app.use((req: Request, res: Response) => {
+app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Endpoint not found' });
 });
 

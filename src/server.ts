@@ -11,44 +11,95 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// ─────────────────────────────────────────────────────────
 // Health check
+// ─────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date() });
 });
 
-// Get all skills
+// ─────────────────────────────────────────────────────────
+// Skills — Push 1 starter pack
+// These are the 3 curated skills that ship with ZERO AGENT
+// ─────────────────────────────────────────────────────────
+const STARTER_SKILLS = [
+  {
+    id: 'find-skills',
+    name: 'find-skills',
+    description: 'Discover and install skills from across the internet in plain English.',
+    category: 'Core',
+    icon: '🔍',
+    tier: 'free',
+    executionMode: 'on-demand',
+    origin: 'skills.sh',
+    originTag: '🟣 skills.sh',
+    preInstalled: true,
+    version: '1.0.0',
+  },
+  {
+    id: 'btc-price',
+    name: 'btc-price',
+    description: 'Get the current Bitcoin price in USD. Live data, no API key required.',
+    category: 'Crypto',
+    icon: '₿',
+    tier: 'free',
+    executionMode: 'on-demand',
+    origin: 'skills.sh',
+    originTag: '🟣 skills.sh',
+    preInstalled: false,
+    version: '1.0.0',
+  },
+  {
+    id: 'weather',
+    name: 'weather',
+    description: 'Get current weather for any city in the world. No API key required.',
+    category: 'Utilities',
+    icon: '🌤',
+    tier: 'free',
+    executionMode: 'on-demand',
+    origin: 'skills.sh',
+    originTag: '🟣 skills.sh',
+    preInstalled: false,
+    version: '1.0.0',
+  },
+];
+
+// GET /api/skills — return available skills
 app.get('/api/skills', async (req, res) => {
   try {
-    const skills = [
-      { id: '1', name: 'Calculator', category: 'Math', price: 0, icon: '🧮', description: 'Basic math operations' },
-      { id: '2', name: 'Email Sender', category: 'Communication', price: 0, icon: '📧', description: 'Send emails' },
-      { id: '3', name: 'Slack Bot', category: 'Communication', price: 5, icon: '💬', description: 'Post to Slack' },
-      { id: '4', name: 'Calendar Manager', category: 'Productivity', price: 0, icon: '📅', description: 'Manage calendar' },
-      { id: '5', name: 'Data Analyzer', category: 'Analytics', price: 9, icon: '📊', description: 'Analyze data' },
-      { id: '6', name: 'PDF Generator', category: 'Documents', price: 10, icon: '📄', description: 'Generate PDFs' },
-    ];
-    res.json({ success: true, skills });
+    res.json({ success: true, skills: STARTER_SKILLS });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch skills' });
   }
 });
 
-// Install skill
+// ─────────────────────────────────────────────────────────
+// Skill install / uninstall
+// ─────────────────────────────────────────────────────────
 app.post('/api/skills/:id/install', async (req, res) => {
   try {
     const { id } = req.params;
     const { agentId } = req.body;
-    res.json({ success: true, message: `Skill ${id} installed` });
+
+    const skill = STARTER_SKILLS.find(s => s.id === id);
+    if (!skill) {
+      return res.status(404).json({ success: false, error: 'Skill not found' });
+    }
+
+    res.json({ success: true, message: `${id} installed`, skill });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to install skill' });
   }
 });
 
-// Execute skill
+// ─────────────────────────────────────────────────────────
+// Agent execution
+// ─────────────────────────────────────────────────────────
 app.post('/api/agents/:agentId/execute', async (req, res) => {
   try {
     const { agentId } = req.params;
     const { skillId, inputs } = req.body;
+
     const executionId = uuidv4();
 
     const result = {
@@ -67,59 +118,51 @@ app.post('/api/agents/:agentId/execute', async (req, res) => {
   }
 });
 
-// Get execution history
+// ─────────────────────────────────────────────────────────
+// Execution history
+// ─────────────────────────────────────────────────────────
 app.get('/api/agents/:agentId/executions', async (req, res) => {
   try {
     const { agentId } = req.params;
-    const executions = [
-      {
-        id: '1',
-        agentId,
-        skillId: '1',
-        status: 'success',
-        createdAt: new Date().toISOString(),
-      },
-    ];
-    res.json({ success: true, executions });
+    // Push 2: pull real execution history from Supabase
+    res.json({ success: true, executions: [] });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch history' });
   }
 });
 
-// Get agent metrics
+// ─────────────────────────────────────────────────────────
+// Agent metrics
+// ─────────────────────────────────────────────────────────
 app.get('/api/agents/:id/metrics', async (req, res) => {
   try {
     const { id } = req.params;
+    // Push 2: calculate real metrics from Supabase skill_executions table
     const metrics = {
-      totalExecutions: 42,
-      successRate: 95,
-      errorRate: 5,
-      lastExecution: new Date().toISOString(),
+      totalExecutions: 0,
+      successRate: 100,
+      errorRate: 0,
+      lastExecution: null,
     };
+
     res.json({ success: true, metrics });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to fetch metrics' });
   }
 });
 
-// Download agent
-app.post('/api/agents/:id/download', async (req, res) => {
-  try {
-    const { id } = req.params;
-    res.json({ success: true, message: 'Agent downloaded', downloadUrl: `/agents/${id}/agent.zip` });
-  } catch (error) {
-    res.status(500).json({ success: false, error: 'Download failed' });
-  }
-});
-
-// Error handler
+// ─────────────────────────────────────────────────────────
+// 404 handler
+// ─────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Endpoint not found' });
 });
 
+// ─────────────────────────────────────────────────────────
 // Start server
+// ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`✅ Health check: http://localhost:${PORT}/health`);
-  console.log(`📚 API: http://localhost:${PORT}/api/skills`);
+  console.log(`🚀 ZERO AGENT backend running on http://localhost:${PORT}`);
+  console.log(`✅ Health: http://localhost:${PORT}/health`);
+  console.log(`📦 Skills: http://localhost:${PORT}/api/skills`);
 });
